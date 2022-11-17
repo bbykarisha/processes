@@ -37,9 +37,9 @@ main(void)
             close(fd[0]);
             exit(0);
         }
+        close(fd[0]);
         wait(NULL);
         
-        close(fd[0]);
         exit(0);
     }
 
