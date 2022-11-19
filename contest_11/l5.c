@@ -64,6 +64,9 @@ main(void)
         exit(0);
     }
 
+    close(fst_fd[0]);
+    close(snd_fd[1]);
+
     int trd_fd[2];
     pipe(trd_fd);
 
@@ -75,16 +78,12 @@ main(void)
 
     while (scanf("%d%d", &fst_num, &snd_num) == 2) {
         if (fork() == 0) {
-            close(fst_fd[0]);
-            close(snd_fd[1]);
             process_son(fst_fd, snd_fd, trd_fd, fst_num, snd_num);
             exit(0);    
         } 
         waitpid(-1, NULL, WNOHANG);  
     }
 
-    close(fst_fd[0]);
-    close(snd_fd[1]);
     close(fst_fd[1]);
     close(snd_fd[0]);
     close(trd_fd[0]);
