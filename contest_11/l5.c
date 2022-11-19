@@ -4,42 +4,47 @@
 #include <sys/wait.h>
 
 void
-processing(int fd_1, int fd_2)
+processing(int *fd_1, int *fd_2)
 {
-    int first = 0;
-    int second = 0;
+    int buffer[2];
+    int result[2];
+    
+    while (read(fd_1[0], buffer, 2 * sizeof(int)) == 2 * sizeof(int)) {     
+        result[0] = buffer[0] + buffer[1];
+        result[1] = buffer[0] - buffer[1];
 
-    while ((read(fd_1, &first,  sizeof(int)) == sizeof(int)) && 
-            (read(fd_1, &second, sizeof(int)) == sizeof(int)))
-    {     
-        int sum = first + second;
-        int dif = first - second;
-
-        write(fd_2, &sum, sizeof(int));
-        write(fd_2, &dif, sizeof(int));
+        write(fd_2[1], result, 2 * sizeof(int));
     } 
 
-    close(fd_1);
-    close(fd_2);
+    close(fd_1[0]);
+    close(fd_2[1]);
 }
 
 void
-process_son(int fd_1, int fd_2, int num_1, int num_2)
+process_son(int *fd_1, int *fd_2, int *fd_3, int num_1, int num_2)
 {
-    write(fd_1, &num_1, sizeof(int));
-    write(fd_1, &num_2, sizeof(int));
-    close(fd_1);
+    int num = 0;
+    read(fd_3[0], &num, sizeof(int));
+     
+    int buffer[2];
+    buffer[0] = num_1;
+    buffer[1] = num_2;
 
-    int sum = 0;
-    int dif = 0;
+    write(fd_1[1], buffer, 2 * sizeof(int));
+     
+    int result[2];
+    read(fd_2[0], result, 2 * sizeof(int));
+    
+    printf("%d %d %d %d\n", num_1, num_2, result[0], result[1]);
 
-    read(fd_2, &sum, sizeof(int));
-    read(fd_2, &dif, sizeof(int));
-    close(fd_2);
+    num = 10;
+    write(fd_3[1], &num, sizeof(int));
 
-    printf("%d %d %d %d\n", num_1, num_2, sum, dif);
+    close(fd_1[1]);
+    close(fd_2[0]);
+    close(fd_3[0]);
+    close(fd_3[1]);
 }
-
 
 int
 main(void)
@@ -55,25 +60,35 @@ main(void)
     if (fork() == 0) {
         close(fst_fd[1]);
         close(snd_fd[0]);
-        processing(fst_fd[0], snd_fd[1]);
+        processing(fst_fd, snd_fd);
         exit(0);
     }
 
-    close(fst_fd[0]);
-    close(snd_fd[1]);
+    int trd_fd[2];
+    pipe(trd_fd);
 
     int fst_num = 0;
     int snd_num = 0;
 
+    int num = 10;
+    write(trd_fd[1], &num, sizeof(int));
+
     while (scanf("%d%d", &fst_num, &snd_num) == 2) {
         if (fork() == 0) {
-            process_son(fst_fd[1], snd_fd[0], fst_num, snd_num);
+            close(fst_fd[0]);
+            close(snd_fd[1]);
+            process_son(fst_fd, snd_fd, trd_fd, fst_num, snd_num);
             exit(0);    
-        }   
+        } 
+        waitpid(-1, NULL, WNOHANG);  
     }
 
+    close(fst_fd[0]);
+    close(snd_fd[1]);
     close(fst_fd[1]);
     close(snd_fd[0]);
+    close(trd_fd[0]);
+    close(trd_fd[1]);
     
     while (wait(NULL) > 0) {}
 
