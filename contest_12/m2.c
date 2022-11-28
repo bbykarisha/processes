@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <unistd.h>
 #include <signal.h>
 #include <stdlib.h>
@@ -10,12 +9,16 @@ void
 sigint_handler(int sig_num)
 {
     ++count;
-    printf("%d\n", count);
+
+    char number = count + '0';
+    char new_line = '\n';
+
+    write(STDOUT_FILENO, &number, sizeof number);
+    write(STDOUT_FILENO, &new_line, sizeof new_line);
+    
     if (count == 5) {
         signal(SIGINT, SIG_DFL);
         exit(0);
-    } else {
-        signal(SIGINT, sigint_handler);
     }
 }
 
@@ -26,12 +29,14 @@ main(void)
     pid_t pid;
 
     if ((pid = fork()) == 0) {
-        while (1) {}
+        while (1) {
+            pause();
+        }
     }
 
     for (int i = 0; i < 5; ++i) {
-        usleep(50);
         kill(pid, SIGINT);
+        usleep(50);
     }
     wait(NULL);
     
