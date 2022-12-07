@@ -74,7 +74,6 @@ server(char *str)
             final_num.val = number;
             // отправляем итоговое число клиенту
             msgsnd(msqid_sc, &final_num, msgsize, 0);
-            break;
         } else if (arg.type == 3) {
             // получаем сообщение о завершении
             break;    
