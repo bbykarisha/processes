@@ -5,14 +5,12 @@
 #include <sys/sem.h>
 #include <sys/wait.h>
 
-#if 0
 union semun 
 {
     int     val;             
     struct  semid_ds *buf;   
     unsigned short *array;          
 };
-#endif
 
 void 
 process_son(char *str, int fd, int n, int ind)
@@ -39,20 +37,9 @@ process_son(char *str, int fd, int n, int ind)
 int
 main(int argc, char *argv[])
 {
-    union semun 
-    {
-        int     val;             
-        struct  semid_ds *buf;   
-        unsigned short *array;          
-    };
-
     int n = 0;
     int k = 0;
     scanf("%d%d", &n, &k);
-
-    if ((n == 0) || (k == 0)) {
-        return 1;
-    } 
 
     char tmp_file[7] = "XXXXXX";
     int tmp_fd = mkstemp(tmp_file);
